@@ -181,6 +181,21 @@ test('.add() - change timeout in between', async t => {
 	t.deepEqual(result, ['🐅']);
 });
 
+test('.add() - aborts with AbortSignal', async t => {
+	const abortController = new AbortController();
+	const {signal} = abortController;
+	const queue = new PQueue({concurrency: 1});
+
+	queue.add(async () => delay(100));
+
+	const abortItem = queue.add(async () => delay(100), {signal});
+
+	abortController.abort();
+
+	await t.throwsAsync(abortItem, {name: 'AbortError'});
+	t.is(queue.pending, 1);
+});
+
 test('.onEmpty()', async t => {
 	const queue = new PQueue({concurrency: 1});
 
